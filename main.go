@@ -5,7 +5,9 @@ import (
 	"log"
 	"net"
 	"time"
+	"net/http"
 
+	"github.com/parchk/livego/api"
 	"github.com/gwuhaolin/livego/configure"
 	"github.com/gwuhaolin/livego/protocol/hls"
 	"github.com/gwuhaolin/livego/protocol/httpflv"
@@ -125,6 +127,14 @@ func main() {
 	hlsServer := startHls()
 	startHTTPFlv(stream)
 	startHTTPOpera(stream)
+
+	go func() {
+		api.Stream = stream
+		m := http.NewServeMux()
+		m.Handle("/stream/is-stream-exist", http.HandlerFunc(api.IsStreamExist))
+
+		http.ListenAndServe(":8989", m)
+	}()
 
 	startRtmp(stream, hlsServer)
 	//startRtmp(stream, nil)
